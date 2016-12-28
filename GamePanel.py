@@ -5,16 +5,16 @@ import threading
 #sys.setrecursionlimit(1000000) #例如这里设置为一百万
 #panel=[[0]*10]*10
 gamePanel = [
-   [ 5,1,5,1,1,5,1,5,3,1 ]
- , [ 5,1,2,1,3,5,2,5,4,1 ]
- , [ 5,2,5,1,3,2,2,4,1,1 ]
- , [ 5,2,3,1,5,2,2,4,4,1 ]
- , [ 4,2,3,1,5,2,2,4,4,1 ]
- , [ 5,2,3,1,5,2,5,5,1,4 ]
- , [ 1,2,1,1,5,1,5,2,4,4 ]
- , [ 5,1,1,5,5,1,5,4,1,4 ]
- , [ 5,1,3,1,4,3,3,4,5,4 ]
- , [ 4,1,1,1,5,4,3,3,5,4]
+   [ 1,2,4,3,2,5,1,1,2,2 ]
+ , [ 1,2,2,2,1,5,2,4,2,2 ]
+ , [ 2,2,2,2,1,5,1,2,2,2 ]
+ , [ 3,2,2,2,3,5,1,1,2,2 ]
+ , [ 3,2,2,1,3,1,1,1,5,2 ]
+ , [ 3,2,1,4,3,3,1,1,1,1 ]
+ , [ 3,3,4,2,3,3,5,2,4,5 ]
+ , [ 3,1,4,2,3,3,4,5,4,5 ]
+ , [ 2,4,2,2,3,1,4,5,4,5 ]
+ , [ 2,4,2,3,3,1,4,4,2,5 ]
 ]
 
 def initPanel():
@@ -26,9 +26,11 @@ def initPanel():
            # print('view     ('+str(i)+str(j)+')'+'='+str(view[i][j]))
     return view
 
+def canExpand(gameView, x, y):
+    if(gameView[x][y]!=0):
+        return True
+    return False
 
-
-dictGroup = {}
 def expand(dictGroup,gameView, x, y):
     if(x>=0 and x<=9 and y>=0 and y<=9):
         start=gameView[x][y]
@@ -73,12 +75,7 @@ def expand(dictGroup,gameView, x, y):
                 dictGroup[str(x)+str(y-1)]=down
                 expand(dictGroup,gameView,x,y-1)
             return dictGroup
-#print(gamePanel.__len__())
 
-#print(globals(panel[8][0]))
-#print(globals(panel[8][1]))
-#print(globals(panel[9][9]))
-#print(globals(panel[0][0]))
 def destoryView(tempGroup,view):
     if(tempGroup!=None):
         for key in tempGroup.keys():
@@ -179,12 +176,13 @@ def getGroupList(view):
     for y in range(0,10):
         for x in range(0,10):
             tempGroup={}
-            tempGroup=expand(tempGroup,view,x,y)
-            #print('('+str(x)+','+str(y)+')'+'=>tempGroup'+str(tempGroup))
-            key=getGroupName(tempGroup)
-            if(panelGroup.get(key)==None and key!=''):
-                panelGroup[key]=tempGroup
-            if(tempGroup!=None):tempGroup.clear()
+            if(canExpand(view,x,y)):
+                tempGroup=expand(tempGroup,view,x,y)
+                #print('('+str(x)+','+str(y)+')'+'=>tempGroup'+str(tempGroup))
+                key=getGroupName(tempGroup)
+                if(panelGroup.get(key)==None and key!=''):
+                    panelGroup[key]=tempGroup
+                if(tempGroup!=None):tempGroup.clear()
     return  panelGroup
 
 def isCleanPanel(view):
@@ -211,21 +209,31 @@ maxscore=0
 processcount=0
 record=[]
 count=1
+poolScore=0
+
+def getPoolScore(group):
+    score=0
+    for key in group.keys():
+        count=(len(key)/2)
+        score=score+(count*count)
+    return score
+
 def initTree(parent):
     global processcount
     groups=copy.deepcopy(parent.groups)
+
     #temp=copy.deepcopy(parent.view)
     if(groups.__len__()==0):
         global count
+        global maxscore
         count=count+1
         #print('************************************************* score:%d'%parent.score+' count:'+str(count))
         if(parent.score>maxscore):
             print('************************************************* score:%d'%parent.score+' count:'+str(count)+' processcount:%d'%processcount)
             #print(str(parent.key)+'\n')
-            global maxscore
             maxscore=parent.score
             record.append(parent.score)
-            fo=open('d:\\foo.txt', 'a')
+            fo=open('result.txt', 'a')
             fo.write(str('score:'+str(parent.score))+'\n')
             fo.write(str(parent.key)+'\n')
             fo.close()
@@ -234,6 +242,9 @@ def initTree(parent):
     else:
         #print('len:%d '%groups.__len__()+'groups:'+str(groups))
         for item in groups.keys():
+
+            global poolScore
+
             #print('item:'+str(item))
             x = int(str(item)[0:1])
             y = int(str(item)[1:2])
@@ -252,6 +263,12 @@ def initTree(parent):
             child.groups=(getGroupList(view))
             child.log.append(view)
             parent.childs.append(child)
+            score=getPoolScore(child.groups)
+            if(poolScore>score+parent.score):
+                pass
+                #continue
+            else:
+                poolScore=+parent.score
             if(processcount<100):
                 processcount=processcount+1
                 t1 = threading.Thread(target=initTree,args=(child,))
@@ -271,14 +288,14 @@ def startGame():
     #y = int(str(item)[1:2])
     #print('start at ('+str(x)+','+str(y)+')')
     tempGroup={}
-    tempGroup=expand(tempGroup,view,8,0)
+    tempGroup=expand(tempGroup,view,3,0)
     print('tempGroup'+str(tempGroup))
     destoryView(tempGroup,view)
     view=refreshView(view)
     drawView(view)
     #view=initGroup(view,1,0)
     root = node()
-    root.key='->'+str(8)+str(0)
+    root.key='->'+str(3)+str(0)
     root.view = view
     root.score=len(tempGroup)*len(tempGroup)
     root.groups=getGroupList(view)
