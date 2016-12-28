@@ -207,7 +207,7 @@ class node:
     childs=[]
     groups=None
     log=[]
-
+maxscore=0
 processcount=0
 record=[]
 count=1
@@ -218,13 +218,15 @@ def initTree(parent):
     if(groups.__len__()==0):
         global count
         count=count+1
-        print('************************************************* score:%d'%parent.score+' count:'+str(count))
-        if(parent.score>1050):
+        #print('************************************************* score:%d'%parent.score+' count:'+str(count))
+        if(parent.score>maxscore):
             print('************************************************* score:%d'%parent.score+' count:'+str(count)+' processcount:%d'%processcount)
             #print(str(parent.key)+'\n')
+            global maxscore
+            maxscore=parent.score
             record.append(parent.score)
             fo=open('d:\\foo.txt', 'a')
-            fo.write(str(parent.score)+'\n')
+            fo.write(str('score:'+str(parent.score))+'\n')
             fo.write(str(parent.key)+'\n')
             fo.close()
         #drawView(parent.view)
@@ -250,11 +252,12 @@ def initTree(parent):
             child.groups=(getGroupList(view))
             child.log.append(view)
             parent.childs.append(child)
-            if(processcount<10):
+            if(processcount<100):
                 processcount=processcount+1
                 t1 = threading.Thread(target=initTree,args=(child,))
                 t1.setDaemon(True)
                 t1.start()
+                #t1.join()
             else:
                 initTree(child)
 threads = []
@@ -262,30 +265,32 @@ def startGame():
     temp=initPanel()
     groups=getGroupList(temp)
     #print('----------'+str(groups))
-    for item in groups.keys():
-        view=copy.deepcopy(temp)
-        x = int(str(item)[0:1])
-        y = int(str(item)[1:2])
-        print('start at ('+str(x)+','+str(y)+')')
-        tempGroup={}
-        tempGroup=expand(tempGroup,view,x,y)
-        print('tempGroup'+str(tempGroup))
-        destoryView(tempGroup,view)
-        view=refreshView(view)
-        drawView(view)
-        #view=initGroup(view,1,0)
-        root = node()
-        root.key=str(x)+str(y)
-        root.view = view
-        root.score=len(tempGroup)*len(tempGroup)
-        root.groups=getGroupList(view)
-        t1 = threading.Thread(target=initTree,args=(root,))
-        threads.append(t1)
-
-    for t in threads:
-        t.setDaemon(True)
-        t.start()
-        t.join()
-    #initTree(root)
+    #for item in groups.keys():
+    view=copy.deepcopy(temp)
+    #x = int(str(item)[0:1])
+    #y = int(str(item)[1:2])
+    #print('start at ('+str(x)+','+str(y)+')')
+    tempGroup={}
+    tempGroup=expand(tempGroup,view,8,0)
+    print('tempGroup'+str(tempGroup))
+    destoryView(tempGroup,view)
+    view=refreshView(view)
+    drawView(view)
+    #view=initGroup(view,1,0)
+    root = node()
+    root.key='->'+str(8)+str(0)
+    root.view = view
+    root.score=len(tempGroup)*len(tempGroup)
+    root.groups=getGroupList(view)
+    #t1 = threading.Thread(target=initTree,args=(root,))
+    #threads.append(t1)
+    #t1.setDaemon(True)
+    #t1.start()
+    #t1.join()
+    #for t in threads:
+    #    t.setDaemon(True)
+    #    t.start()
+    #    t.join()
+    initTree(root)
 
 startGame()
