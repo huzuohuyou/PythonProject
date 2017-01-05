@@ -39,13 +39,19 @@ class DLog:
             output.close()
             #print(self.exArray)
 
-    def logLastId(self,lastId):
-        self.lastId=lastId
+    def logSuccessId(self,id):
+        if(id in self.exArray):
+            self.exArray.remove(id)
+        if(id>self.lastId):
+            self.lastId=id
         output = open('dlog.pkl', 'wb')
         # Pickle dictionary using protocol 0.
         pickle.dump(self, output,-1)
         output.close()
 
+    def removeId(self,id):
+        if(id in self.exArray):
+            self.exArray.remove(id)
 
 
 def downingArray(dlog,array):
@@ -55,7 +61,8 @@ def downingArray(dlog,array):
             print("PMCID:"+str(id)+url)
             filename='PMC{id}'.format(id=os.path.basename(url))
             urllib.request.urlretrieve(url, 'E://Docs//'+filename, callbackfunc)
-            dlog.logLastId(id)
+            #dlog.removeId(id)
+            dlog.logSuccessId(id)
         except:
             dlog.logExId(id)
 
