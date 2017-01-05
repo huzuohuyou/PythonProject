@@ -37,7 +37,7 @@ class DLog:
             # Pickle dictionary using protocol 0.
             pickle.dump(self, output,-1)
             output.close()
-            print(self.exArray)
+            #print(self.exArray)
 
     def logLastId(self,lastId):
         self.lastId=lastId
@@ -46,17 +46,15 @@ class DLog:
         pickle.dump(self, output,-1)
         output.close()
 
-    def getLastId(self):
-        return self.lastId
+
 
 def downingArray(dlog,array):
     for id in array:
-        print("reloading exid " +str(dlog.exArray)+'...')
         try:
             url='http://pubmedcentralcanada.ca/pmcc/articles/PMC{id}/pdf/{id}.pdf'.format(id=id)
             print("PMCID:"+str(id)+url)
-            filename='PMC{ID}'.format(id=os.path.basename(url))
-            urllib.request.urlretrieve(url, filename, callbackfunc)
+            filename='PMC{id}'.format(id=os.path.basename(url))
+            urllib.request.urlretrieve(url, 'E://Docs//'+filename, callbackfunc)
             dlog.logLastId(id)
         except:
             dlog.logExId(id)
@@ -69,7 +67,7 @@ def downimg():
         pkl_file = open('dlog.pkl', 'rb')
         dlog = pickle.load(pkl_file)
         pkl_file.close()
-        print("exist file dlog.pkl load dlog lastId:{lastId}...".format(lastId=dlog.lastId))
+        print("exist file dlog.pkl load dlog lastId:{lastId} exArray{exArray}...".format(lastId=dlog.lastId,exArray=str(dlog.exArray)))
     else:
         dlog = DLog(3128072,[])
         print("didn't exist file dlog.pkl create new one ...")
