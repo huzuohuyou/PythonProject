@@ -3,6 +3,7 @@ import sys
 import os
 import threading
 import pickle
+import time
 def callbackfunc(blocknum, blocksize, totalsize):
     '''回调函数
     @blocknum: 已经下载的数据块
@@ -53,10 +54,16 @@ class DLog:
         if(id in self.exArray):
             self.exArray.remove(id)
 
+def fileCountIn(dir):
+    return sum([len(files) for root,dirs,files in os.walk(dir)])
 
 def downingArray(dlog,array):
     for id in array:
         try:
+            #print('s')
+            #print('文件个数：'+str(fileCountIn('E:\Docs')))
+            if(fileCountIn('E:\Docs')==8000):
+                time.sleep(60*60)
             url='http://pubmedcentralcanada.ca/pmcc/articles/PMC{id}/pdf/{id}.pdf'.format(id=id)
             print("PMCID:"+str(id)+url)
             filename='PMC{id}'.format(id=os.path.basename(url))
@@ -81,7 +88,7 @@ def downimg():
     #失败数据重载
     downingArray(dlog,dlog.exArray)
     #新数据下载
-    downingArray(dlog,range(dlog.lastId,99999999))
+    downingArray(dlog,range(dlog.lastId,5128072))
 
 #启动线程下载
 threading.Thread(target=downimg,args=('')).start()
