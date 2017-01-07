@@ -1,9 +1,16 @@
+__author__ = 'jishu12'
+#import urllib
 import urllib.request
+#import http.client
 import sys
 import os
 import threading
 import pickle
 import time
+import zipfile
+
+dir='E://Docs//'
+zip_count=1000
 def callbackfunc(blocknum, blocksize, totalsize):
     '''回调函数
     @blocknum: 已经下载的数据块
@@ -16,7 +23,7 @@ def callbackfunc(blocknum, blocksize, totalsize):
         percent = 100
     downsize=blocknum * blocksize
     if downsize >= totalsize:
-    	downsize=totalsize
+        downsize=totalsize
     s ="%.2f%%"%(percent)+"====>"+"%.2f"%(downsize/1024/1024)+"M/"+"%.2f"%(totalsize/1024/1024)+"M \r"
     sys.stdout.write(s)
     sys.stdout.flush()
@@ -58,26 +65,64 @@ def fileCountIn(dir):
     return sum([len(files) for root,dirs,files in os.walk(dir)])
 
 def downingArray(dlog,array):
+    global  dir
     for id in array:
         try:
-            #print('s')
             #print('文件个数：'+str(fileCountIn('E:\Docs')))
-            if(fileCountIn('E:\Docs')==8000):
+            if(fileCountIn(dir)>zip_count):
+                zipPDF()
                 time.sleep(60*60)
             url='http://pubmedcentralcanada.ca/pmcc/articles/PMC{id}/pdf/{id}.pdf'.format(id=id)
             print("PMCID:"+str(id)+url)
             filename='PMC{id}'.format(id=os.path.basename(url))
-            urllib.request.urlretrieve(url, 'E://Docs//'+filename, callbackfunc)
+            urllib.request.urlretrieve(url, dir+filename, callbackfunc)
             #dlog.removeId(id)
             dlog.logSuccessId(id)
         except:
             dlog.logExId(id)
 
+def zip_dir(dirname,zipfilename):
+    """
+    | ##@函数目的: 压缩指定目录为zip文件
+    | ##@参数说明：dirname为指定的目录，zipfilename为压缩后的zip文件路径
+    | ##@返回值：无
+    | ##@函数逻辑：
+    """
+    filelist = []
+    if os.path.isfile(dirname):
+        filelist.append(dirname)
+    else :
+        for root, dirs, files in os.walk(dirname):
+            for name in files:
+                filelist.append(os.path.join(root, name))
+
+    zf = zipfile.ZipFile(zipfilename, "w", zipfile.zlib.DEFLATED)
+    for tar in filelist:
+        arcname = tar[len(dirname):]
+        #print arcname
+        zf.write(tar,arcname)
+        #print('------------'+tar)
+        os.remove(tar)
+    zf.close()
+
+def zipPDF():
+    """
+    压缩pdf文件，过滤以PMC开头的
+    """
+    global  dir
+    f = zipfile.ZipFile('{dir}{zipName}.zip'.format(dir=dir,zipName='docs_'+str(time.time())),'w',zipfile.ZIP_DEFLATED)
+    count=0
+    for d in os.listdir(dir):
+        if(str(d).startswith('PMC') and count!=zip_count):
+            f.write(dir+d)
+            os.remove(dir+d)
+            count=count+1
+    f.close()
+
 def downimg():
 #3128072
     dlog=None
     if(os.path.exists("dlog.pkl")):
-
         pkl_file = open('dlog.pkl', 'rb')
         dlog = pickle.load(pkl_file)
         pkl_file.close()
@@ -92,3 +137,5 @@ def downimg():
 
 #启动线程下载
 threading.Thread(target=downimg,args=('')).start()
+#zip_dir('E:\\Docs\\docs','E:\Docs\\docs.zip')
+#zipPDF()
